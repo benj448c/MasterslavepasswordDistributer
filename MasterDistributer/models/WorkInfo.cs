@@ -4,7 +4,7 @@ using System.Text;
 
 namespace MasterDistributer
 {
-    class WorkInfo
+    public class WorkInfo
     {
 		private Guid _id;
 		private List<UserInfo> _usersList;
