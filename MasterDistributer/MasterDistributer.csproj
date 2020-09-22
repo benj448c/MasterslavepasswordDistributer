@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <Reference Include="Librarys">
-      <HintPath>..\..\..\..\source\repos\Librarys\Librarys\bin\Debug\netcoreapp3.1\Librarys.dll</HintPath>
+      <HintPath>..\..\Librarys\Librarys\bin\Debug\netcoreapp3.1\Librarys.dll</HintPath>
     </Reference>
   </ItemGroup>
 
