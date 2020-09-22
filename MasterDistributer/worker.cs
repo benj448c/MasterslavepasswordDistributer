@@ -6,6 +6,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using Librarys.TCPServer;
 using MasterDistributer.models;
 using Newtonsoft.Json;
@@ -17,7 +18,7 @@ namespace MasterDistributer
         private Queue<string> notdone = new Queue<string>();
         private List<UserInfo> userInfos;
         private Dictionary<Guid, WorkInfo> working = new Dictionary<Guid, WorkInfo>();
-        private Dictionary<string, string> passwordmatches = new Dictionary<string, string>();
+        private List<UserInfoClearText> passwordmatches = new List<UserInfoClearText>();
 
 
         public void readfromfile()
@@ -34,6 +35,8 @@ namespace MasterDistributer
                     notdone.Enqueue(dictionary.ReadLine());
                 }
             }
+
+            System.Console.WriteLine("Ready to hack!!");
         }
 
         private List<string> getBatch(int wordsCount)
@@ -57,7 +60,7 @@ namespace MasterDistributer
         {
 
             WorkInfo work = new WorkInfo();
-            work.WordList = getBatch(5000);
+            work.WordList = getBatch(1000);
             if (work.WordList.Count == 0)
             {
                 return null;
@@ -79,18 +82,20 @@ namespace MasterDistributer
                 //indgående: 
                 //Forespørgelse på en workinfo: hack
                 //Svar på hack: completed
-
+                //Svar på password fundet : passwordfound
                 //udgående:
                 //
 
                 switch (sr.ReadLine())
                 {
-                    case "hack":
-
+                    case "hack": 
                         WorkInfo w = assignWorker();
                         if (w != null)
                         {
                             string workinfo_string = JsonConvert.SerializeObject(w);
+                            Console.WriteLine(workinfo_string);
+                            Thread.Sleep(4000);
+                            Console.WriteLine("Sending hack info!!");
                             sw.WriteLine(workinfo_string);
                         }
                         else
@@ -102,16 +107,19 @@ namespace MasterDistributer
 
                     case "passwordfound":
                         string passwordsfound = sr.ReadLine();
-                        PasswordFoundInfo userpassfound =
-                            JsonConvert.DeserializeObject<PasswordFoundInfo>(passwordsfound);
+                        List<UserInfoClearText> userpassfound =
+                            JsonConvert.DeserializeObject<List<UserInfoClearText>>(passwordsfound);
 
-                        passwordmatches.Add(userpassfound._username, userpassfound._password);
-
-                        foreach (UserInfo user in userInfos)
+                        foreach (UserInfoClearText passwordmatch in userpassfound)
                         {
-                            if (user.Username == userpassfound._username)
+                            passwordmatches.Add(passwordmatch);
+
+                            foreach (UserInfo user in userInfos)
                             {
-                                userInfos.Remove(user);
+                                if (user.Username == passwordmatch.UserName)
+                                {
+                                    userInfos.Remove(user);
+                                }
                             }
                         }
 

@@ -9,7 +9,7 @@ namespace MasterDistributer
             Console.WriteLine("Hello World!");
             worker worker1 = new worker();
             worker1.readfromfile();
-            worker1.Start();
+            worker1.Start(7007);
         }
     }
 }
