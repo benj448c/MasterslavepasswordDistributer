@@ -60,7 +60,7 @@ namespace MasterDistributer
         {
 
             WorkInfo work = new WorkInfo();
-            work.WordList = getBatch(1000);
+            work.WordList = getBatch(50000);
             if (work.WordList.Count == 0)
             {
                 return null;
@@ -93,10 +93,11 @@ namespace MasterDistributer
                         if (w != null)
                         {
                             string workinfo_string = JsonConvert.SerializeObject(w);
-                            Console.WriteLine(workinfo_string);
-                            Thread.Sleep(4000);
+                            Console.WriteLine(w.WordList.Count + w.WordList[0]);
                             Console.WriteLine("Sending hack info!!");
                             sw.WriteLine(workinfo_string);
+                            sw.Flush();
+                            Console.WriteLine("hack send");
                         }
                         else
                         {
@@ -127,7 +128,7 @@ namespace MasterDistributer
 
                     case "completed":
                         string completeInfo = sr.ReadLine();
-                        Guid id = JsonConvert.DeserializeObject<Guid>(completeInfo);
+                        Guid id = Guid.Parse(completeInfo);
                         working.Remove(id);
                         break;
                 }
