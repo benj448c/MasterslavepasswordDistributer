@@ -7,6 +7,7 @@ using System.Linq.Expressions;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
+using System.Threading.Channels;
 using Librarys.TCPServer;
 using MasterDistributer.models;
 using Newtonsoft.Json;
@@ -20,13 +21,13 @@ namespace MasterDistributer
         private Dictionary<Guid, WorkInfo> working = new Dictionary<Guid, WorkInfo>();
         private List<UserInfoClearText> passwordmatches = new List<UserInfoClearText>();
 
-
+        private int batch_size = 5000;
         public void readfromfile()
         {
             userInfos = PasswordFileHandler.ReadPasswordFile("passwords.txt");
 
 
-            using (FileStream fs = new FileStream("webster-dictionary.txt", FileMode.Open, FileAccess.Read))
+            using (FileStream fs = new FileStream("webster-dictionary_test.txt", FileMode.Open, FileAccess.Read))
 
             using (StreamReader dictionary = new StreamReader(fs))
             {
@@ -41,7 +42,6 @@ namespace MasterDistributer
 
         private List<string> getBatch(int wordsCount)
         {
-
             List<string> batch = new List<string>();
             for (int i = 0; i < wordsCount; i++)
             {
@@ -53,6 +53,9 @@ namespace MasterDistributer
                 batch.Add(notdone.Dequeue());
             }
 
+            Console.WriteLine("words left : " + notdone.Count);
+            Console.WriteLine("passwords found : " + passwordmatches.Count);
+
             return batch;
         }
 
@@ -60,7 +63,7 @@ namespace MasterDistributer
         {
 
             WorkInfo work = new WorkInfo();
-            work.WordList = getBatch(50000);
+            work.WordList = getBatch(batch_size);
             if (work.WordList.Count == 0)
             {
                 return null;
@@ -86,8 +89,18 @@ namespace MasterDistributer
                 //udgående:
                 //
 
-                switch (sr.ReadLine())
+
+
+                
+                //Console.WriteLine("listening for message");
+                string message = sr.ReadLine();
+                Console.WriteLine(message);
+
+                switch (message)
                 {
+                    
+
+
                     case "hack": 
                         WorkInfo w = assignWorker();
                         if (w != null)
@@ -115,13 +128,24 @@ namespace MasterDistributer
                         {
                             passwordmatches.Add(passwordmatch);
 
+
+
+                            List<UserInfo> usersToRemove = new List<UserInfo>();
+
                             foreach (UserInfo user in userInfos)
                             {
                                 if (user.Username == passwordmatch.UserName)
                                 {
-                                    userInfos.Remove(user);
+                                    usersToRemove.Add(user);
                                 }
                             }
+
+                            foreach (UserInfo user in usersToRemove)
+                            {
+                                userInfos.Remove(user);
+                            }
+                            
+
                         }
 
                         break;
@@ -133,9 +157,18 @@ namespace MasterDistributer
                         break;
                 }
 
-                if(working.Count == 0 && notdone.Count == 0)
+                if(working.Count == 0 && notdone.Count == 0 || userInfos.Count == 0)
                 {
+                    Console.WriteLine("----- Cracking Completed");
+                    foreach (UserInfoClearText userinfo in passwordmatches)
+                    {
+                        Console.WriteLine(userinfo.ToString());
+                    }
                     hackInProgress = false;
+                     
+
+                    
+
                 }
 
            
